@@ -14,7 +14,6 @@
 
 FROM golang:1.15.2-alpine3.12
 RUN apk add git
-RUN apk add upx || true
 USER 1000:1000
 ENV GOCACHE /go/.cache
 ENV CGO_ENABLED 0
@@ -25,7 +24,6 @@ RUN go get -d github.com/kubernetes/klog && mv /go/src/github.com/kubernetes /go
 # recursively get dependencies
 RUN go get -d ./...
 RUN go build -a -ldflags '-extldflags "-static" -s -w' -o /go/nfs-client-provisioner ./...
-RUN command -v upx && upx --ultra-brute /go/nfs-client-provisioner
 
 FROM scratch
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
