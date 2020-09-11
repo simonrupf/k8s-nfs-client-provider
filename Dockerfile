@@ -26,7 +26,8 @@ RUN go get -d ./...
 RUN go build -a -ldflags '-extldflags "-static" -s -w' -o /go/nfs-client-provisioner ./...
 
 FROM scratch
+# folder creation requires root permissions
+USER 0
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=0 /go/nfs-client-provisioner /bin/nfs-client-provisioner
-USER 255:255
 ENTRYPOINT ["/bin/nfs-client-provisioner"]
