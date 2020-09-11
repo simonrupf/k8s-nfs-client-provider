@@ -12,7 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.6
-RUN apk update --no-cache && apk add ca-certificates
-COPY nfs-client-provisioner /nfs-client-provisioner
-ENTRYPOINT ["/nfs-client-provisioner"]
+FROM golang:1.15.2-alpine3.12
+RUN apk add git upx
+USER 1000:1000
+ENV GOCACHE /go/.cache
+ENV CGO_ENABLED 0
+COPY cmd /go/src/cmd
+WORKDIR /go/src/cmd
+# workaround as the k8s.io/klog redirect currently fails
+RUN go get -d github.com/kubernetes/klog && mv /go/src/github.com/kubernetes /go/src/k8s.io
+# recursively get dependencies
+RUN go get -d ./...
+RUN go build -a -ldflags '-extldflags "-static" -s -w' -o /go/nfs-client-provisioner ./...
+RUN upx --ultra-brute /go/nfs-client-provisioner
+
+FROM scratch
+COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=0 /go/nfs-client-provisioner /bin/nfs-client-provisioner
+USER 255:255
+ENTRYPOINT ["/bin/nfs-client-provisioner"]
