@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.15.2-alpine3.12
+FROM golang:1.15.7-alpine3.13
 RUN apk add git
 USER 1000:1000
 ENV GOCACHE /go/.cache
